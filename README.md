@@ -18,24 +18,24 @@ Cyclistic’s historical trip data of the [last 12 months] (https://divvy-tripda
 The codebase contains three main files:
     • An R file containing data analysis and visualizations (with related comments),accessed [here]
     • An [R Markdown] file containing the case study project activities step by step with code chunks.
-    • A HTML file rendering the contents in the RMarkdown file.
-    • The detailed [Tableau] vizualization
+    • The [Tableau] vizualization of the analysed data
     
 ### Conclusions and Recommendations
 #### Conclusions
-    • The average trips were more by annual members
-    • Despite a fairly constant average ride length by subscribed members, casual riders rode for more durations than the most common ride duration.
-    • Most casual riders opt for weekend use while subscribed members prefer Fridays and Wednesdays.
-    • *Classic bike* is the most preferred bike, followed by electric bike.
-    • *Casual riders prefer to ride on Weekends and around 5 PM in the evening*.
-    • *The influx of casual riders is more in third quarter, which implies that most of the casual riders could be tourists/visitors*
-    • *The most popular station have more than twice the rides started from it as compared to the second most popular one*
+    • Casual riders had longer trip duration's than annual members.
+    • Saturday was the best riding day for casual riders and Sunday for annual members.
+    • Bike use usually peaks at rush hour times, between 3pm to 7pm.
+    • Months around summer have the most rides by both user categories and winter is the least busiest.
+    • The most utilized bike are docked bikes with most trips and longer riding duration's.
+    • Casual riders utilize the bikes more than annual subscribers in all bike categories.
+    • Clark St & Elm St represents the most used station by members.
+    • Streeter Dr & Grand Ave is the most used station by casuals.
 #### Recommendations
     • The marketing team should target casual riders over the weekend during the summer and autumn seasons.
     • Approach casual riders at Streeter Dr and Grand Avenue as a start station and Clark St & Elm St as the end station
     • Aim to stock more docked bikes and perhaps promote classic bikes to the new cohort since casual riders ride for longer durations.
     • Include a public health promotion campaign for bike riding benefits.
-    • *The best time to launch the new marketing campaign are between 15:00 to 19:00, Weekends and Holidays, in the month of June to September*.
-    • *A targeted strategy at most popular station will reach the maximum number of Casual riders*
+    • Aim to launch the new marketing campaign at peak hours between 3-7pm .
+    
 
 
