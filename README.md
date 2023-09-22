@@ -18,7 +18,7 @@ Cyclistic’s historical trip data of the [last 12 months] (https://divvy-tripda
 The codebase contains three main files:
     • An R file containing data analysis and visualizations (with related comments),accessed [here]
     • An [R Markdown] file containing the case study project activities step by step with code chunks.
-    • The [Tableau] vizualization of the analysed data
+   
     
 ### Conclusions and Recommendations
 #### Conclusions
