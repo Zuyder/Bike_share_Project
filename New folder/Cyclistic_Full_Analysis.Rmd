@@ -1,0 +1,366 @@
+---
+title: "Cyclistic_Full_Analysis"
+author: "Solomon Opi"
+date: "2023-09-20"
+output: html_document
+---
+## Business Task
+The business task is to analyze the differences between annual members and casual riders. Cyclistic company's goal is to increase its market share by maximizing the potential of its client base. The aim is to convert casual riders to annual subscribers. The analysis therefore identifies the trends, and the bottlenecks and uses the results to optimize what will work for the company going forward. The analysis concludes by presenting key recommendations to stakeholders to increase company growth.
+
+Let us install and load the relevant packages and set the directory for the analysis files.
+
+```{r}
+library(tidyverse)
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(skimr)
+```
+```{r}
+setwd("C:/Users/opiso/Desktop/All Data")
+getwd()
+```
+
+## Data Sources
+
+The data was obtained from the company database and holds cyclist details from all stations for 12 months. The data was also reliable, original, current, and comprehensive in answering the question. The [license](https://divvybikes.com/data-license-agreement) to use the data was issued by Motivate International Inc. The data was well-aligned and relevant for solving the business problem. There were 12 different CSV files that were bound into one file for better analysis.
+
+```{r}
+df1 <- read.csv("C:/Users/opiso/Desktop/All Data/202006-divvy-tripdata.csv")
+df2 <- read.csv("C:/Users/opiso/Desktop/All Data/202007-divvy-tripdata.csv")
+df3 <- read.csv("C:/Users/opiso/Desktop/All Data/202008-divvy-tripdata.csv")
+df4 <- read.csv("C:/Users/opiso/Desktop/All Data/202009-divvy-tripdata.csv")
+df5 <- read.csv("C:/Users/opiso/Desktop/All Data/202010-divvy-tripdata.csv")
+df6 <- read.csv("C:/Users/opiso/Desktop/All Data/202011-divvy-tripdata.csv")
+df7 <- read.csv("C:/Users/opiso/Desktop/All Data/202012-divvy-tripdata.csv")
+df8 <- read.csv("C:/Users/opiso/Desktop/All Data/202101-divvy-tripdata.csv")
+df9 <- read.csv("C:/Users/opiso/Desktop/All Data/202102-divvy-tripdata.csv")
+df10 <- read.csv("C:/Users/opiso/Desktop/All Data/202103-divvy-tripdata.csv")
+df11 <- read.csv("C:/Users/opiso/Desktop/All Data/202104-divvy-tripdata.csv")
+df12 <- read.csv("C:/Users/opiso/Desktop/All Data/202105-divvy-tripdata.csv")
+```
+```{r}
+all_trips <- rbind(df1,df2,df3,df4,df5,df6,df7,df8,df9,df10,df11,df12)
+View(all_trips)
+str(all_trips)
+```
+
+## Cleaning and Manipulation
+
+In order to ensure integrity, the data was checked for duplicates, typos, and nulls, and data was complete. We first inspect the data set to identify issues that needed fixing.
+```{r}
+colnames(all_trips)
+nrow(all_trips)
+summary(all_trips)
+```
+
+### Manipulation of data
+
+Data on the latitude and longitude are deemed irrelevant and will be omitted.
+
+```{r}
+all_trips <- all_trips %>% 
+  select(-c(start_lat,start_lng,end_lat,end_lng))
+```
+
+The data can only be aggregated at the ride-level, which is too granular. We will want to add some additional columns of data such as day, month, year and day of the week that provide additional opportunities to aggregate the ridership data. 
+
+```{r}
+all_trips$date <- as.Date(all_trips$started_at)
+all_trips$month <- format(as.Date(all_trips$date), "%m")
+all_trips$day <- format(as.Date(all_trips$date), "%d")
+all_trips$year <- format(as.Date(all_trips$date), "%Y")
+all_trips$day_of_week <- format(as.Date(all_trips$date), "%A")
+```
+
+In order to determine the duration of bike rides, a ride length column was calculated by subtracting end_time and start_time. The results are in seconds. 
+```{r}
+all_trips$ride_length <- difftime(all_trips$ended_at,all_trips$started_at)
+```
+
+Since the data type of the new ride length column created is in factor, it is important to convert it to numeric for a more convenient analysis.
+
+```{r}
+is.factor(all_trips$ride_length)
+all_trips$ride_length <- as.numeric(as.character(all_trips$ride_length))
+is.numeric(all_trips$ride_length)
+```
+
+Since the **dirty** data was removed, a duplicate file is essential as a backup before futher descriptive analysis such that the original file remains as clean as possible. 
+
+```{r}
+all_trips_v2 <- all_trips[!(all_trips$start_station_name == "HQ QR" | all_trips$ride_length<0),]
+```
+
+## Decriptive Analysis
+
+The key questions guiding the analysis are:
+
+* What is the overall distribution of users?  
+* What is the average number of bike trips per user category? **mean**
+* What is the most common bike trip length? **median**
+* What is the range of bike trip lengths?i.e., **range** the largest and   smallest ride lengths. 
+* Are there any trends in the bike trip data over time:	
+  * Most and least popular docking stations per user status,
+  * The most popular usage time i,e.,rush-hour,days, seasons etc.
+
+### The overall distribution of users:
+
+```{r}
+all_trips_v2 %>%
+  group_by(member_casual) %>%
+  summarize(count = length(member_casual), '%Rides' = (length(member_casual) / nrow(all_trips_v2)) * 100 )
+```
+```{r}
+all_trips %>%
+  ggplot(aes(member_casual, fill = member_casual)) + 
+  geom_bar() + labs(x= "User Type", y= "No of rides", 
+                    title = "Ride distribution by user type")
+```
+
+With 1,673,053 casual riders and 2,348,430 annual subscribers it would be pivotal to determine how they utilized Cyclistic's bikes.The basic measures of central tendencies for each user category are analysed below:
+
+```{r}
+summary(all_trips_v2$ride_length)
+```
+```{r}
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = mean)
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = median)
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = max)
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = min)
+
+```
+
+The average ride length for both annual subscribers and casual riders was 20 minutes. Casual members showed greater variability from the average ride length, registering an average of 29 minutes while annual subscribers registered a lower average ride length of 14 minutes. Consequently, the longest recorded trip was 155 minutes, equaled by both user types coincidentally. 
+
+#### Ride distribution by user type and day of week
+
+```{r}
+all_trips_v2 %>% 
+  mutate(weekday = wday(started_at, label = TRUE)) %>%  
+  group_by(member_casual, weekday) %>%  
+  summarise(no_of_rides = n()						
+            ,average_duration = mean(ride_length)) %>% 		
+  arrange(member_casual, weekday)
+```
+```{r}
+all_trips_v2 %>%
+  group_by(member_casual, day_of_week)%>%
+  summarise(number_of_ride = n(),
+            .groups = "drop")%>%
+  ggplot(aes(day_of_week, number_of_ride, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(title = "The number of rides by Weekday", 
+       x = "Weekday", y = "Number of rides")
+```
+
+It is observed that most casual users opt to ride on Saturday recording 386,813 rides with an average of 31 minute trip duration.Interestingly Sunday has 321,616 rides with an average trip duration of 33 minutes for casuals as well. Likewise, annual subscribers prefer Sunday's as well, registering 307,107 rides with an average ride time of 16 minutes. 
+
+#### Ride distribution by time of day
+
+As evidenced by the chart below, bike use usually peaks at rush hour times, between 3pm to 7pm. The trend is observed for both user category although the number of rides by members is significantly higher.
+
+```{r}
+all_trips_v2 %>% 
+  mutate(hour = hour(started_at)) %>%
+  group_by(member_casual, hour) %>%
+  summarise(no_of_rides = n(),
+            .groups = "drop") %>%
+  ggplot(aes(hour, no_of_rides, color = member_casual)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(labels = scales::label_number_si(),
+                     breaks = seq(0, 300000, 25000)) +
+  scale_x_continuous(breaks = seq(0, 23, 1)) +
+  labs(title = "Number of rides by hour of the day", 
+       x = "Hour of day", y = "No of rides")
+```
+
+A closer look at the ride distribution by month shows that June, July and Aug are the months with most rides both user categories. January and December represent the least busiest months.
+In the busy months however, it is evident that the number of casual riders are significantly more than for annual subscribers. 
+
+```{r}
+all_trips_v2 %>% 
+  group_by(member_casual, month) %>%
+  summarize(mean = mean(ride_length),
+            .groups = "drop") %>%
+  ggplot(aes(month, mean, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(breaks = seq(0, 28, 2)) +
+  labs(title = "The average ride length by month", 
+       x = "Month", y = "Average (min)")
+```
+
+### Bike and user analysis
+
+Cyclistic sets itself apart by offering classic, docked and electric bikes. The most utilized bike are docked bikes used at least 2,296,000 times far outpacing the other two bike categories.
+
+```{r}
+all_trips_v2 %>% 
+  group_by(rideable_type) %>%
+  summarise(number_of_rides = n())
+```
+```{r}
+all_trips_v2 %>% 
+  group_by(rideable_type) %>%
+  summarise(number_of_rides = n()) %>%
+  ggplot(aes(rideable_type, number_of_rides, fill = rideable_type)) +
+  geom_col(position = "dodge", show.legend = FALSE) +
+  scale_y_continuous(labels = scales::label_number_si(),
+                     breaks = seq(0, 3000000, 1000000)) +
+  labs(title = "Utilization of bikes", 
+       x = "Rideable type",
+       y = "Bike usage")
+```
+
+The annual members are observed to utilize the bike more across all the rideable bike types.
+
+```{r}
+all_trips_v2 %>% 
+  group_by(member_casual, rideable_type) %>%
+  summarise(number_of_rides = n(),
+            .groups = "drop") %>%
+  arrange(rideable_type)
+```
+```{r}
+all_trips_v2 %>% 
+  group_by(member_casual, rideable_type) %>%
+  summarise(number_of_rides = n(),
+            .groups = "drop") %>%
+  ggplot(aes(member_casual, number_of_rides, fill = rideable_type)) +
+  geom_col(position = "dodge") +
+  labs(title = "Bike usages by member status", 
+       x = "Member Status", 
+       y = "Bike usages")
+```
+
+In addition to being the most used rideable bike type, the docked bike also recorded the highest average trip duration across the bike categories.
+
+```{r}
+# bike type and average ride length
+all_trips_v2 %>% 
+  group_by(rideable_type) %>%
+  summarise(mean = mean(ride_length),
+            .groups = "drop") %>%
+  arrange(rideable_type)
+```
+```{r}
+all_trips_v2 %>% 
+  group_by(rideable_type) %>%
+  summarise(mean = mean(ride_length),
+            .groups = "drop") %>%
+  ggplot(aes(rideable_type, mean)) +
+  geom_col(position = "dodge") +
+  labs(title = "Average ride length by bike type",
+       y = "Average ride length",
+       x = "Bike Type")
+```
+
+It comes as no surprise that casual riders utilize the bikes more than annual subscribers in all bike categories.
+
+```{r}
+all_trips %>% 
+  group_by(member_casual, rideable_type) %>%
+  summarise(mean = mean(ride_length),
+            .groups = "drop") %>%
+  arrange(rideable_type)
+```
+```{r}
+all_trips_v2 %>% 
+  group_by(member_casual, rideable_type) %>%
+  summarise(mean = mean(ride_length),
+            .groups = "drop") %>%
+  ggplot(aes(rideable_type, mean, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(title = "Average ride length by bike and user status", 
+       y = "Average ride length",
+       x = "Bike type")
+```
+
+### Docking Station analysis
+
+The data shows that Cyclistic offers 718 stations across Chicago.
+```{r}
+stations<- all_trips_v2 %>%
+  gather(key, station_name, start_station_name, end_station_name) %>%
+  distinct(station_name)
+print(paste("Number of stations are", nrow(stations)))
+```
+
+Clark St & Elm St represents the most used station by members with 122,798 trips. 
+
+```{r}
+users_station <- all_trips_v2 %>%
+  gather(key, station_name, start_station_name, end_station_name) %>%
+  group_by(member_casual, station_name) %>%
+  summarise(no_of_trips = n()/2,
+            .groups = "drop_last") %>%
+  arrange(desc(no_of_trips)) %>%
+  slice(1:10)
+```
+```{r}
+#to check for annual subscribers
+users_station %>% 
+  tail(10)
+```
+```{r}
+users_station %>%
+  tail(10) %>%
+  ggplot(aes(no_of_trips, reorder(station_name, no_of_trips))) +
+  geom_col() +
+  labs(title = "The top 10 most visited stations by member riders", 
+       x = "Number of trips", 
+       y = "Station name")
+```
+
+Likewise, the most used station by casual riders is Streeter Dr & Grand Ave with 37,146 recorded trips.
+
+```{r}
+users_station <- all_trips_v2 %>%
+  gather(key, station_name, start_station_name, end_station_name) %>%
+  group_by(member_casual, station_name) %>%
+  summarise(no_of_trips = n()/2,
+            .groups = "drop_last") %>%
+  arrange(desc(no_of_trips)) %>%
+  slice(1:10)
+```
+```{r}
+# for casual riders
+users_station %>% 
+  head(10)
+```
+```{r}
+users_station %>%
+  head(10) %>%
+  ggplot(aes(no_of_trips, reorder(station_name, no_of_trips))) +
+  geom_col() +
+  scale_x_continuous(labels = scales::label_number_si(),
+                     breaks = seq(0, 65000, 5000)) +
+  labs(title = "The top 10 most visited stations by Casual riders",
+       x = "Number of trips",
+       y = "Station name")
+```
+
+## Conclusions and Recommendations
+### Conclusions
+* The total number of trips were more by annual members although casuals were still in their millions.
+* Casual riders had longer trip duration's than annual members.
+* Saturday was the best riding day for casual riders and Sunday for annual members.
+* Bike use usually peaks at rush hour times, between 3pm to 7pm.
+* Months around summer have the most rides by both user categories and winter is the least busiest.
+* The most utilized bike are docked bikes with most trips and longer riding duration's.
+* Casual riders utilize the bikes more than annual subscribers in all bike categories.
+* Clark St & Elm St represents the most used station by members.
+* Streeter Dr & Grand Ave is the most used station by casuals.
+
+### Recommendations
+
+The marketing team at Cyclistic understand that users are more likely to ride for leisure, but about 30% use them to commute to work each day. With the flexible pricing plans such as single-ride passes and full-day passes, it will be critical for the company to convert the 41.6% of casual riders to annual members. In order to do that, it is recommended that:
+
+* The marketing team should target casual riders over the weekend during the summer and autumn seasons.
+* Approach casual riders at Streeter Dr and Grand Avenue as a start station and Clark St & Elm St as the end station.
+* Aim to stock more docked bikes and perhaps promote classic bikes since casual riders ride for longer duration's.
+* Include a public health promotion campaign for bike riding benefits.
+* Aim to launch the new marketing campaign at peak hours between 3-7pm
+
